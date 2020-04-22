@@ -2,6 +2,7 @@ class Graph {
 
   /**
    * Constructor for the Graph class
+   * Graph is stored as a dictionary, which is an adjacency list
    * @constructor
    * @param {*} nodes  - List of nodes, given by [{"id":"name"},...]
    * @param {*} edges - List of edges, given by [{"source":"id1", "target": "id2", "weight": "num"}]
@@ -58,6 +59,28 @@ class Graph {
       this.nodes[n]["value"] = new_values[n];
     }
   }
+
+  /**
+   * Stores each node's value into a key to free up the value slot
+   * @param {*} key - The key to store each node's value in 
+   */
+  store_values(key) {
+    for (let n in this.nodes) {
+      this.nodes[n][key] = this.nodes[n]["value"];
+    }
+  }
+
+  /**
+   * Resets the values of all of the nodes
+   * @param {*} value - The value to reset every node's value to
+   */
+  reset_values(value=0) {
+    for (let n in this.nodes) {
+      this.nodes[n]["value"] = value;
+    }
+  }
+
+
   
 
 }

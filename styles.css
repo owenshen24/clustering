@@ -1,0 +1,18 @@
+.nodes {
+  fill: black;
+  cursor: pointer;
+}
+
+.links {
+  stroke: black;
+}
+
+.tooltip {
+  position: absolute;			
+  text-align: center;
+  font-size: 1.15rem;
+  font-family: Arial, Helvetica, sans-serif;	
+  background: rgb(230, 230, 230);
+  padding-left: 2px;
+  padding-right: 2px;
+}
