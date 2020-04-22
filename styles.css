@@ -1,3 +1,15 @@
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.graph-holder {
+  outline: thin black solid;
+}
+
+circle {
+  stroke: black;
+}
+
 .nodes {
   fill: black;
   cursor: pointer;
@@ -15,4 +27,14 @@
   background: rgb(230, 230, 230);
   padding-left: 2px;
   padding-right: 2px;
+}
+
+.button-holder {
+  margin-bottom: 0.5rem;
+}
+
+pre code {
+  background-color: #eee;
+  border: 1px solid #999;
+  display: block;
 }

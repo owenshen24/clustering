@@ -8,10 +8,12 @@ class Graph {
    * @param {*} edges - List of edges, given by [{"source":"id1", "target": "id2", "weight": "num"}]
    */
 
-  constructor(nodes, edges) {
+  constructor(nodes, edges, directed) {
     this.nodes = {};
+    // initialize all nodes to be 0 value with no neighbors
     for (let n of nodes) {
       this.nodes[n["id"]] = {};
+      this.nodes[n["id"]]["value"] = 0;
     }
     for (let e of edges) {
       let curr_node = this.nodes[e["source"]];
@@ -21,14 +23,21 @@ class Graph {
       if (curr_node["neighbors"] === undefined) {
         curr_node["neighbors"] = [];
       }
-      // NOTE: Assume undirected edges for now
       curr_node["neighbors"].push({
         "target": e["target"],
         "weight": w
       });
-    }
-    for (let n in this.nodes) {
-      this.nodes[n]["value"] = 0;
+      // if is undirected, also add an edge in the opposite direction
+      if (! directed) {
+        let adj_node = this.nodes[e["target"]];
+        if (adj_node["neighbors"] === undefined) {
+          adj_node["neighbors"] = [];
+        }
+        adj_node["neighbors"].push({
+          "target": e["source"],
+          "weight": w
+        });
+      }
     }
   }
 
@@ -37,28 +46,40 @@ class Graph {
    * @param {*} id - The id of the node to modify
    * @param {*} value - The resistance to set it to
    */
-  set_resistance(id, value) {
+  set_value(id, value) {
     this.nodes[id]["value"] = value;
+    this.nodes[id]["terminal"] = true;
   }
 
   /**
-   * Calculates the effective resistance for all nodes, given their current resistances
+   * Calculates the effective resistance for all nodes, given their current resistances (excluding nodes set by set_value)
    */
-  calculate_resistance_distance() {
-    let new_values = {};
-    for (let n in this.nodes) {
-      let curr_node = this.nodes[n];
-      let running_total = 0;
-      for (let e of curr_node["neighbors"]) {
-        running_total += this.nodes[e["target"]]["value"];
+  calc_resistance(iters) {
+    for (let i = 0; i < iters; i++) {
+      // Create new values, which are the average of each node's neighbor's values
+      let new_values = {};
+      for (let n in this.nodes) {
+        let curr_node = this.nodes[n];
+        if (curr_node["terminal"] !== true) {
+          let running_total = 0;
+          for (let e of curr_node["neighbors"]) {
+            running_total += this.nodes[e["target"]]["value"];
+          }
+          running_total = running_total/curr_node["neighbors"].length;
+          new_values[n] = running_total;
+        }
       }
-      running_total = running_total/curr_node["neighbors"].length;
-      new_values[n] = running_total;
-    }
-    for (let n in this.nodes) {
-      this.nodes[n]["value"] = new_values[n];
+      // Copy new values over
+      for (let n in this.nodes) {
+        let curr_node = this.nodes[n];
+        if (curr_node["terminal"] !== true) {
+          curr_node["value"] = new_values[n];
+        }
+      }
     }
   }
+
+
 
   /**
    * Stores each node's value into a key to free up the value slot
@@ -71,12 +92,13 @@ class Graph {
   }
 
   /**
-   * Resets the values of all of the nodes
+   * Resets the values of all of the nodes and removes the terminal flag
    * @param {*} value - The value to reset every node's value to
    */
   reset_values(value=0) {
     for (let n in this.nodes) {
       this.nodes[n]["value"] = value;
+      this.nodes[n]["terminal"] = false;
     }
   }
 
@@ -106,20 +128,23 @@ class GraphDrawer {
    * Draws the graph onto the canvas
    */
   draw_graph() {
-    let margin = {top: 10, right: 30, bottom: 30, left: 40};
+    // remove previous graph
+    d3.select("svg").remove();
     let width = 640;
     let height = 480;
+    let radius = 10;
 
     let svg = d3.select("#graph")
       .append("svg")
+      .attr("class", "graph-holder")
       .attr("width", width)
       .attr("height", height)
-      .append("g")
-      .attr("transform",
-        "translate(" + margin.left + "," + margin.top + ")");
+      .append("g");
+      // .attr("transform",
+      //   "translate(" + margin.left + "," + margin.top + ")");
 
     let simulation = d3.forceSimulation(this.nodes)
-      .force("charge_force", d3.forceManyBody())
+      // center nodes
       .force("center_force", d3.forceCenter(width / 2, height / 2));
     
     let tooltip = d3.select("body").append("div")	
@@ -132,23 +157,29 @@ class GraphDrawer {
       .data(this.nodes)
       .enter()
       .append("circle")
-      .attr("r", 5)
-      .on("click", function() {
-      })
+      .attr("r", radius)
       .on("mouseover", function(d) {		
         tooltip.transition()		
           .duration(100)		
           .style("opacity", .9);		
-          // TODO: fix this so we can see the resistance
         tooltip.html("id: " + d.id + " | value: " + window.graph.nodes[d.id]["value"])	
           .style("left", (d3.event.pageX) + "px")		
           .style("top", (d3.event.pageY - 28) + "px");	
         })					
-    .on("mouseout", function(d) {		
+      .on("mouseout", function(d) {		
         tooltip.transition()		
-            .duration(100)		
-            .style("opacity", 0);	
-    });
+          .duration(100)		
+          .style("opacity", 0);})
+      .on("click", function(d) {
+        let value = prompt("Enter value");
+        window.graph.set_value(d.id, value);
+        d3.select(this)
+          .attr("fill", d3.scaleSequential(d3.interpolateCividis)(window.graph.nodes[d.id]["value"]));
+      })
+      .call(d3.drag()
+        .on("start", restart_sim)
+        .on("drag", fix_node)
+        .on("end", end_sim));
 
     let link_force = d3.forceLink(this.edges).id(function(d) { return(d.id); });
     simulation.force("links", link_force);
@@ -162,23 +193,43 @@ class GraphDrawer {
 
     simulation.on("tick", tickActions);
 
+    d3.selectAll("circle")
+      .each(this.update_color);
+
+    /* Internally used functions
+     */
     function tickActions() {
+      let factor = radius;
       node
-          .attr("cx", function(d) { return d.x; })
-          .attr("cy", function(d) { return d.y; });
+          .attr("cx", function(d) { return d.x = Math.max(factor, Math.min(width - factor, d.x)); })
+          .attr("cy", function(d) { return d.y = Math.max(factor, Math.min(height - factor, d.y)); });
       link
           .attr("x1", function(d) { return d.source.x; })
           .attr("y1", function(d) { return d.source.y; })
           .attr("x2", function(d) { return d.target.x; })
           .attr("y2", function(d) { return d.target.y; });
-    }       
+    }
+    function restart_sim() {
+      if (!d3.event.active) {
+        simulation.alphaTarget(0.1).restart();
+      }
+    }
+    function fix_node(d) {
+      d.fx = d3.event.x;
+      d.fy = d3.event.y;
+    }
+    function end_sim() {
+      if (!d3.event.active) {
+        simulation.alphaTarget(0);
+      }
+    }
   }
 
   /**
-   * Redraws the graph to the canvas, called after the graph updates
+   * Redraws the node's color to match its value
    */
-  update_graph() {
-
+  update_color(node) {
+    d3.select(this).attr("fill", d3.scaleSequential(d3.interpolateCividis)(window.graph.nodes[node.id]["value"]));
   }
 
   /**
@@ -189,46 +240,39 @@ class GraphDrawer {
   }
 }
 
-let nodes = 
-[{"id":"1"}, 
-{"id":"2"}, 
-{"id":"3"}, 
-{"id":"4"}, 
-{"id":"5"}, 
-{"id":"6"}, 
-{"id":"7"}, 
-{"id":"8"}, 
-{"id":"9"}, 
-{"id":"10"}, 
-{"id":"11"}, 
-{"id":"12"}, 
-{"id":"13"}, 
-{"id":"14"}, 
-{"id":"15"}, 
-{"id":"16"}, 
-{"id":"17"}, 
-{"id":"18"}, 
-{"id":"19"}];
-// hack for now (undirected edges have duplicates)
-let edges = 
-[{"source":"1", "target":"2"}, 
-{"source":"2", "target":"3"}, 
-{"source":"3", "target":"4"}, 
-{"source":"4", "target":"5"}, 
-{"source":"5", "target":"6"}, 
-{"source":"6", "target":"7"}, 
-{"source":"7", "target":"8"}, 
-{"source":"8", "target":"9"}, 
-{"source":"9", "target":"10"}, 
-{"source":"10", "target":"11"}, 
-{"source":"11", "target":"12"}, 
-{"source":"12", "target":"13"}, 
-{"source":"13", "target":"14"}, 
-{"source":"14", "target":"15"}, 
-{"source":"15", "target":"16"}, 
-{"source":"16", "target":"17"}, 
-{"source":"17", "target":"18"}, 
-{"source":"18", "target":"19"}];
-let g = new Graph(nodes, edges);
-let drawer = new GraphDrawer(nodes, edges, g);
-drawer.draw_graph();
+let ui = $(document).ready(function() {
+  // show sample graph onload
+  show_sample();
+
+  $("#upload").on("change", function(e) {
+    if (window.File && window.FileReader && window.FileList && window.Blob) {
+      let file = e.target.files[0];
+      let reader = new FileReader(file);
+      reader.addEventListener("loadend", function() {
+        let data = JSON.parse(reader.result);
+        init_graph(data);
+      });
+      reader.readAsText(file);
+    } 
+    else {
+      alert('The File APIs are not fully supported in this browser.');
+    }
+  });
+  $("#sample").click(function() {
+    show_sample();
+  });
+});
+
+function init_graph(data) {
+  let g = new Graph(data["nodes"], data["edges"], data["directed"]);
+  let gd = new GraphDrawer(data["nodes"], data["edges"], g);
+  gd.draw_graph();
+}
+
+function show_sample() {
+  let data = {};
+  data["directed"] = false;
+  data["nodes"] = [{"id":"1"},{"id":"2"},{"id":"3"}];
+  data["edges"] = [{"source": "1", "target": "2"}, {"source": "2", "target": "3"}, {"source": "1", "target": "3"}];
+  init_graph(data);
+}

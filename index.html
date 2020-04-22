@@ -5,13 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Graph Clustering</title>
   <link rel="stylesheet" type="text/css" href="styles.css">
-  <!-- <script defer src="https://code.jquery.com/jquery-3.5.0.slim.min.js" 
+  <script defer src="https://code.jquery.com/jquery-3.5.0.slim.min.js" 
   integrity="sha256-MlusDLJIP1GRgLrOflUQtshyP0TwT/RHXsI1wWGnQhs=" 
-  crossorigin="anonymous"></script> -->
+  crossorigin="anonymous"></script>
   <script defer src="https://d3js.org/d3.v5.min.js"></script>
   <script defer src="dist/bundle.js"></script>
 </head>
 <body>
   <div id="graph"></div>
+  <div class="button-holder">
+    <input type="file" accept=".json" id="upload">
+  </div>
+  <div class="button-holder">
+    <button id="sample">Sample Graph</button>
+  </div>
+  <div>
+    Graphs are encoded in a JSON file with the following format:
+    <pre>
+      <code>
+{
+ "directed": boolean
+ "nodes": [{"id": "string1"}, ...]
+ "edges": [{"source": "stringA", "target": "stringB", "weight": integer}, ...]
+}
+      </code>
+    </pre>
+    <p>"directed" tells whether or not the graph is directed. "nodes" is a list of objects, with string ids. "edges" is a list of edge objects, which specify a source and a target node id. The "weight" parameter is optional and defaults to 1.</p>
+  </div>
 </body>
 </html>
