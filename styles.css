@@ -30,6 +30,7 @@ circle {
 }
 
 .button-holder {
+  margin-top: 0.5rem;
   margin-bottom: 0.5rem;
 }
 
@@ -37,4 +38,8 @@ pre code {
   background-color: #eee;
   border: 1px solid #999;
   display: block;
+}
+
+.format {
+  margin-top: -1rem;
 }
