@@ -1,3 +1,13 @@
+let color_scheme = d3.interpolateRdBu;
+let width = 640;
+let height = 480;
+let radius = 10;
+
+// Changes [-1,1] to [0,1]
+function squish(x) {
+  return((x+1)/2);
+}
+
 class GraphDrawer {
   
   /**
@@ -22,10 +32,6 @@ class GraphDrawer {
     // remove previous graph
     d3.select("svg").remove();
 
-    let width = 640;
-    let height = 480;
-    let radius = 10;
-
     let svg = d3.select("#graph")
       .append("svg")
       .attr("class", "graph-holder")
@@ -34,13 +40,14 @@ class GraphDrawer {
       .append("g")
 
     let simulation = d3.forceSimulation(this.nodes)
+      .force("charge_force", d3.forceManyBody())
       // center nodes
       .force("center_force", d3.forceCenter(width / 2, height / 2));
     
     let tooltip = d3.select("body").append("div")	
       .attr("class", "tooltip")				
       .style("opacity", 0);
-    
+
     let node = svg.append("g")
       .attr("class", "nodes")
       .selectAll("circle")
@@ -61,10 +68,10 @@ class GraphDrawer {
           .duration(100)		
           .style("opacity", 0);})
       .on("click", function(d) {
-        let value = prompt("Enter value");
+        let value = parseInt(prompt("Enter value"));
         window.graph.set_value(d.id, value);
         d3.select(this)
-          .attr("fill", d3.scaleSequential(d3.interpolateBlues)(window.graph.nodes[d.id]["value"]));
+          .attr("fill", d3.scaleSequential(color_scheme)(squish(window.graph.nodes[d.id]["value"])));
       })
       .call(d3.drag()
         .on("start", restart_sim)
@@ -83,8 +90,8 @@ class GraphDrawer {
 
     simulation.on("tick", tickActions)
 
-    d3.selectAll("circle")
-      .each(this.update_color);
+    // Set color based on initial value
+    this.update_all_colors()
 
     /* Internally used functions
      */
@@ -115,18 +122,30 @@ class GraphDrawer {
     }
   }
 
-  /**
-   * Redraws the node's color to match its value
-   */
   update_color(node) {
-    d3.select(this).attr("fill", d3.scaleSequential(d3.interpolateBlues)(window.graph.nodes[node.id]["value"]));
+    d3.select(this).attr("fill", d3.scaleSequential(color_scheme)(squish(window.graph.nodes[node.id]["value"])));
   }
 
   /**
-   * Binds a function to a node, to happen on event
+   * Redraws all nodes' colors to match its value
    */
-  bind_node() {
+  update_all_colors() {
+    d3.selectAll("circle").each(this.update_color);
+  }
 
+  /**
+   * Updates the positions of nodes based on the current value
+   */
+  update_positions(axis) {
+    d3.selectAll("circle").each(function(d) {
+      if (axis === "x") {
+        d.fx = squish(window.graph.nodes[d.id]["value"])*width;
+      }
+      else
+      if (axis === "y") {
+        d.fy = squish(window.graph.nodes[d.id]["value"])*height;
+      }
+    });
   }
 }
 
