@@ -145,6 +145,7 @@ class GraphDrawer {
       if (axis === "y") {
         d.fy = squish(window.graph.nodes[d.id]["value"])*height;
       }
+      simulation.alpha(0.8).restart();
     });
   }
 }
