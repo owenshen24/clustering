@@ -130,6 +130,7 @@ class GraphDrawer {
   constructor(nodes, edges, graph) {
     this.nodes = nodes;
     this.edges = edges;
+    this.simulation = undefined;
     // make graph globally accessible
     window.graph = graph;
   }
@@ -152,6 +153,7 @@ class GraphDrawer {
       .force("charge_force", d3.forceManyBody())
       // center nodes
       .force("center_force", d3.forceCenter(width / 2, height / 2));
+    this.simulation = simulation;
     
     let tooltip = d3.select("body").append("div")	
       .attr("class", "tooltip")				
@@ -255,6 +257,7 @@ class GraphDrawer {
         d.fy = squish(window.graph.nodes[d.id]["value"])*height;
       }
     });
+    this.simulation.alpha(0).restart();
   }
 }
 
