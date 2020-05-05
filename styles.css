@@ -1,9 +1,13 @@
 body {
   font-family: Arial, Helvetica, sans-serif;
+  max-width: 60rem;
+  padding-top: 1rem;
+  margin: auto;
 }
 
-.graph-holder {
+.graph {
   outline: thin black solid;
+  display: block;
 }
 
 circle {

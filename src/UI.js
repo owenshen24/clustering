@@ -27,24 +27,8 @@ let ui = $(document).ready(function() {
 });
 
 function init_graph(data) {
-  let g = new Graph(data["nodes"], data["edges"], data["directed"]);
-  let gd = new GraphDrawer(data["nodes"], data["edges"], g);
+  let gd = new GraphDrawer(data["nodes"], data["edges"]);
   gd.draw_graph();
-  $("#runX").click(function() {
-    run_cluster(g, gd, "x");
-  });
-  $("#runY").click(function() {
-    run_cluster(g, gd, "y");
-  });
-}
-
-function run_cluster(graph, graph_drawer, axis) {
-  let times = parseInt($("#iter-field").val());
-  graph.calc_resistance(times);
-  graph_drawer.update_all_colors();
-  graph_drawer.update_positions(axis);
-  graph.store_values(axis);
-  graph.reset_values();
 }
 
 function show_sample() {
