@@ -47,8 +47,8 @@ class GraphDrawer {
       .style("opacity", 0);
 
     let manyBody = d3.forceManyBody()
-      .strength(-30)
-      .distanceMax(200);
+      .strength(-50)
+      .distanceMax(300);
 
     let link_force = d3.forceLink(this.edges)
       .id(function(d) { return(d.id); })

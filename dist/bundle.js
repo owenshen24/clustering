@@ -42,8 +42,8 @@ class GraphDrawer {
       .style("opacity", 0);
 
     let manyBody = d3.forceManyBody()
-      .strength(-30)
-      .distanceMax(200);
+      .strength(-50)
+      .distanceMax(300);
 
     let link_force = d3.forceLink(this.edges)
       .id(function(d) { return(d.id); })
@@ -139,48 +139,6 @@ function init_graph(data) {
 }
 
 function show_sample() {
-  let data = {};
-  data["directed"] = false;
-  data["nodes"] = [
-    {"id":"1"}, 
-    {"id":"2"}, 
-    {"id":"3"}, 
-    {"id":"4"}, 
-    {"id":"5"}, 
-    {"id":"6"}, 
-    {"id":"7"}, 
-    {"id":"8"}, 
-    {"id":"9"}, 
-    {"id":"10"}, 
-    {"id":"11"}, 
-    {"id":"12"}, 
-    {"id":"13"}, 
-    {"id":"14"}, 
-    {"id":"15"}, 
-    {"id":"16"}, 
-    {"id":"17"}, 
-    {"id":"18"}, 
-    {"id":"19"}
-  ];
-  data["edges"] = [
-    {"source":"1", "target":"2"}, 
-    {"source":"2", "target":"3"}, 
-    {"source":"3", "target":"4"}, 
-    {"source":"4", "target":"5"}, 
-    {"source":"5", "target":"6"}, 
-    {"source":"6", "target":"7"}, 
-    {"source":"7", "target":"8"}, 
-    {"source":"8", "target":"9"}, 
-    {"source":"9", "target":"10"}, 
-    {"source":"10", "target":"11"}, 
-    {"source":"11", "target":"12"}, 
-    {"source":"12", "target":"13"}, 
-    {"source":"13", "target":"14"}, 
-    {"source":"14", "target":"15"}, 
-    {"source":"15", "target":"16"}, 
-    {"source":"16", "target":"17"}, 
-    {"source":"17", "target":"18"}, 
-    {"source":"18", "target":"19"}
-  ];
+  let data = {"directed": false, "nodes": [{"id": "0,0"}, {"id": "0,1"}, {"id": "0,2"}, {"id": "0,3"}, {"id": "0,4"}, {"id": "1,0"}, {"id": "1,1"}, {"id": "1,2"}, {"id": "1,3"}, {"id": "1,4"}, {"id": "2,0"}, {"id": "2,1"}, {"id": "2,2"}, {"id": "2,3"}, {"id": "2,4"}], "edges": [{"source": "0,0", "target": "1,0"}, {"source": "0,0", "target": "0,1"}, {"source": "0,1", "target": "0,0"}, {"source": "0,1", "target": "1,1"}, {"source": "0,1", "target": "0,2"}, {"source": "0,2", "target": "0,1"}, {"source": "0,2", "target": "1,2"}, {"source": "0,2", "target": "0,3"}, {"source": "0,3", "target": "0,2"}, {"source": "0,3", "target": "1,3"}, {"source": "0,3", "target": "0,4"}, {"source": "0,4", "target": "0,3"}, {"source": "0,4", "target": "1,4"}, {"source": "1,0", "target": "0,0"}, {"source": "1,0", "target": "2,0"}, {"source": "1,0", "target": "1,1"}, {"source": "1,1", "target": "0,1"}, {"source": "1,1", "target": "1,0"}, {"source": "1,1", "target": "2,1"}, {"source": "1,1", "target": "1,2"}, {"source": "1,2", "target": "0,2"}, {"source": "1,2", "target": "1,1"}, {"source": "1,2", "target": "2,2"}, {"source": "1,2", "target": "1,3"}, {"source": "1,3", "target": "0,3"}, {"source": "1,3", "target": "1,2"}, {"source": "1,3", "target": "2,3"}, {"source": "1,3", "target": "1,4"}, {"source": "1,4", "target": "0,4"}, {"source": "1,4", "target": "1,3"}, {"source": "1,4", "target": "2,4"}, {"source": "2,0", "target": "1,0"}, {"source": "2,0", "target": "2,1"}, {"source": "2,1", "target": "1,1"}, {"source": "2,1", "target": "2,0"}, {"source": "2,1", "target": "2,2"}, {"source": "2,2", "target": "1,2"}, {"source": "2,2", "target": "2,1"}, {"source": "2,2", "target": "2,3"}, {"source": "2,3", "target": "1,3"}, {"source": "2,3", "target": "2,2"}, {"source": "2,3", "target": "2,4"}, {"source": "2,4", "target": "1,4"}, {"source": "2,4", "target": "2,3"}]};
   init_graph(data);
 }
