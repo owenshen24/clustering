@@ -27,7 +27,8 @@ let ui = $(document).ready(function() {
 });
 
 function init_graph(data) {
-  let gd = new GraphDrawer(data["nodes"], data["edges"]);
+  let g = new Graph(data["nodes"], data["edges"], data["directed"]);
+  let gd = new GraphDrawer(data["nodes"], data["edges"], data["directed"], g);
   gd.draw_graph();
 }
 

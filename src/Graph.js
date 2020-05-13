@@ -19,27 +19,31 @@ class Graph {
       let curr_node = this.nodes[e["source"]];
       // NOTE: Assume integer edge weights for now
       let w = (e["weight"] === undefined) ? 1 : parseInt(e["weight"]);
-      let l = (e["length"] === undefined) ? 1 : parseInt(e["length"]);
+      let d = (e["distance"] === undefined) ? 30 : parseInt(e["distance"]);
       // Create empty adjacency list if none exists
       if (curr_node["neighbors"] === undefined) {
         curr_node["neighbors"] = [];
       }
-      curr_node["neighbors"].push({
+      let edge1 = {
+        "source": e["source"],
         "target": e["target"],
         "weight": w,
-        "length": l
-      });
+        "distance": d
+      };
+      curr_node["neighbors"].push(edge1);
       // if is undirected, also add an edge in the opposite direction
       if (! directed) {
         let adj_node = this.nodes[e["target"]];
         if (adj_node["neighbors"] === undefined) {
           adj_node["neighbors"] = [];
         }
-        adj_node["neighbors"].push({
+        let edge2 = {
+          "source": e["target"],
           "target": e["source"],
           "weight": w,
-          "length": l
-        })
+          "distance": d
+        };
+        adj_node["neighbors"].push(edge2)
       }
     }
   }

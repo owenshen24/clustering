@@ -2,9 +2,16 @@ let width = 1000;
 let height = 600;
 let radius = 6;
 
-// Changes [-1,1] to [0,1]
-function squish(x) {
-  return((x+1)/2);
+function l2_norm(v1, v2) {
+  let sum = 0;
+  for (let i = 0; i < v1.length; i++) {
+    sum += Math.pow((v1[i]-v2[i]),2);
+  }
+  return(Math.sqrt(sum));
+}
+
+function vector_add(v1, v2) {
+  return([v1[0]+v2[0], v1[1]+v2[1]])
 }
 
 class GraphDrawer {
@@ -17,15 +24,26 @@ class GraphDrawer {
    * 
    * @param {*} graph - A reference to the graph that this class draws
    */
-  constructor(nodes, edges) {
+  constructor(nodes, edges, directed, graph) {
     this.nodes = nodes;
-    for (let e of edges) {
-      let w = (e["weight"] === undefined) ? 1 : parseInt(e["weight"]);
-      let l = (e["length"] === undefined) ? 30 : parseInt(e["length"]);
-      e["weight"] = w;
-      e["length"] = l;
+    // make nodes globally accessible
+    window["nodes"] = nodes;
+
+    // let node_map = {};
+    // for (let n of nodes) {
+    //   node_map[n["id"]] = n;
+    // }
+    // window["node_map"] = node_map;
+
+    let e = [];
+    for (let k in graph["nodes"]) {
+      e = e.concat(graph["nodes"][k]["neighbors"]);
     }
-    this.edges = edges;
+
+    this.edges = e;
+
+    // make graph globally accessible
+    window["graph"] = graph;
   }
 
   /**
@@ -46,34 +64,65 @@ class GraphDrawer {
       .attr("class", "tooltip")				
       .style("opacity", 0);
 
-    let manyBody = d3.forceManyBody()
-      .strength(-50)
-      .distanceMax(300);
+    let many_body = d3.forceManyBody()
+      .strength(-30)
+      .distanceMax(100);
 
     let link_force = d3.forceLink(this.edges)
       .id(function(d) { return(d.id); })
       .distance(function(e) { 
-        return(e["weight"]*e["length"]);
+        return(e["distance"]*e["weight"]);
        })
-      .iterations(10);
+      .strength(0.01);
+  
+    let is_centered = false;
+
+    function approx_force() {
+      let step_size = 0.0015;
+      if (! is_centered) {
+        is_centered = true;
+        for (let i = 0; i < window["nodes"].length; i++) {
+          window["nodes"][i]["x"] = (Math.random()/5 + 0.8)*width/2;
+          window["nodes"][i]["y"] = (Math.random()/5 + 0.8)*height/2;
+        }
+      }
+      else {
+        for (let i = 0; i < window["nodes"].length; i++) {
+          let curr_node = window["nodes"][i];
+          let adj_list = window["graph"]["nodes"][curr_node["id"]]["neighbors"];
+          let full_grad = [0,0];
+          for (let j = 0; j < adj_list.length; j++) {
+            let neighbor = adj_list[j]["target"];
+            let v1 = [curr_node.x, curr_node.y];
+            let v2 = [neighbor.x, neighbor.y];
+            let diff = l2_norm(v1, v2) - adj_list[j]["distance"];
+            diff = step_size * diff * adj_list[j]["weight"];
+            let grad = [diff*(v1[0]-v2[0]), diff*(v1[1]-v2[1])];
+            full_grad = vector_add(full_grad, grad);
+          }
+          curr_node.x -= full_grad[0];
+          curr_node.y -= full_grad[1];
+        }
+      }
+    }
 
     let simulation = d3.forceSimulation(this.nodes)
-      .force("charge_force", manyBody)
-      .force("center_force", d3.forceCenter(width / 2, height / 2))
-      .force("links", link_force);
-    
+      .force("links", link_force)
+      .force("approx_force", approx_force)
+      .force("many_body", many_body)
+      .alphaDecay(0.003);
+
     let node = svg.append("g")
-    .attr("class", "nodes")
-    .selectAll("circle")
-    .data(this.nodes)
-    .enter()
-    .append("circle")
-    .attr("r", radius)
-    .call(d3.drag()
-      .on("start", restart_sim)
-      .on("drag", fix_node)
-      .on("end", end_sim));
-    
+      .attr("class", "nodes")
+      .selectAll("circle")
+      .data(this.nodes)
+      .enter()
+      .append("circle")
+      .attr("r", radius)
+      .call(d3.drag()
+        .on("start", restart_sim)
+        .on("drag", fix_node)
+        .on("end", end_sim));
 
     let link = svg.append("g")
       .attr("class", "links")
@@ -87,7 +136,6 @@ class GraphDrawer {
     /* Internally used functions
      */
     function tickActions() {
-      let factor = radius;
       node
           .attr("cx", function(d) { return d.x })
           .attr("cy", function(d) { return d.y });
@@ -108,7 +156,7 @@ class GraphDrawer {
     }
     function end_sim() {
       if (!d3.event.active) {
-        simulation.alphaTarget(0);
+        simulation.alphaTarget(0.1);
       }
     }
   }
