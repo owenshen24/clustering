@@ -155,8 +155,11 @@ class GraphDrawer {
             let grad = [diff*(v1[0]-v2[0]), diff*(v1[1]-v2[1])];
             full_grad = vector_add(full_grad, grad);
           }
-          curr_node.x -= full_grad[0];
-          curr_node.y -= full_grad[1];
+
+          let new_x = curr_node.x - full_grad[0];
+          let new_y = curr_node.y - full_grad[1];
+          curr_node.x = Math.max(radius, Math.min(width - radius, new_x));
+          curr_node.y = Math.max(radius, Math.min(height - radius, new_y));
         }
       }
     }
