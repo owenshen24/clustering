@@ -15,11 +15,19 @@ class Graph {
       this.nodes[n["id"]] = {};
       this.nodes[n["id"]]["value"] = 0;
     }
+    
+    // Scales distances for so average edge distance is 30
+    let scaling_factor = 30/(edges.reduce(function(acc, e) {
+      let d = (e["distance"] === undefined) ? 30 : parseFloat(e["distance"]);
+      return(acc+d);
+      }, 0)/edges.length);
+
+    // Populate edge list
     for (let e of edges) {
       let curr_node = this.nodes[e["source"]];
-      // NOTE: Assume integer edge weights for now
-      let w = (e["weight"] === undefined) ? 1 : parseInt(e["weight"]);
-      let d = (e["distance"] === undefined) ? 30 : parseInt(e["distance"]);
+      let w = (e["weight"] === undefined) ? 1 : parseFloat(e["weight"]);
+      let d = (e["distance"] === undefined) ? 30 : parseFloat(e["distance"]);
+      d = scaling_factor*d;
       // Create empty adjacency list if none exists
       if (curr_node["neighbors"] === undefined) {
         curr_node["neighbors"] = [];
