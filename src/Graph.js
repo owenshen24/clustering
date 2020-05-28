@@ -16,8 +16,8 @@ class Graph {
       this.nodes[n["id"]]["value"] = 0;
     }
     
-    // Scales distances for so average edge distance is 30
-    let scaling_factor = 30/(edges.reduce(function(acc, e) {
+    // Scales distances for so average edge distance is reasonable
+    let scaling_factor = 35/(edges.reduce(function(acc, e) {
       let d = (e["distance"] === undefined) ? 30 : parseFloat(e["distance"]);
       return(acc+d);
       }, 0)/edges.length);
