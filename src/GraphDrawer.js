@@ -72,7 +72,7 @@ class GraphDrawer {
 
     function approx_force() {
       //let step_size = 0.0017;
-      let step_size = 0.0005;
+      let step_size = 0.001;
       if (! is_centered) {
         is_centered = true;
         for (let i = 0; i < window["nodes"].length; i++) {
@@ -113,6 +113,8 @@ class GraphDrawer {
       .force("many_body", many_body)
       .alphaDecay(0.0075);
     
+    let transform = d3.zoomIdentity;
+
     simulation.nodes(this.nodes)
     .on("tick", ticked);
 
@@ -120,16 +122,21 @@ class GraphDrawer {
     d3.select(canvas)
       .call(d3.drag()
           .container(canvas)
-          .subject(dragsubject)
-          .on("start", dragstarted)
+          .subject(drag_subject)
+          .on("start", drag_started)
           .on("drag", dragged)
-          .on("end", dragended));
+          .on("end", drag_ended))
+      .call(d3.zoom()
+        .scaleExtent([1 / 10, 8])
+        .on('zoom', zoomed));
 
     /* Internally used functions
      */
     function ticked() {
-      // remove previous graph
+      context.save();
       context.clearRect(0, 0, width, height);
+      context.translate(transform.x, transform.y);
+      context.scale(transform.k, transform.k);
 
       context.beginPath();
       edges.forEach(draw_edge);
@@ -141,6 +148,8 @@ class GraphDrawer {
       context.fill();
       context.strokeStyle = "#fff";
       context.stroke();
+
+      context.restore();
     }
 
     function draw_edge(d) {
@@ -153,33 +162,58 @@ class GraphDrawer {
       context.arc(d.x, d.y, radius, 0, 2 * Math.PI);
     }
 
-    function dragsubject() {
-      let x = d3.event.x;
-      let y = d3.event.y;
-      for (let node of nodes) {
-        let dx = x - node.x;
-        let dy = y - node.y;
-        if (dx * dx + dy * dy < radius * radius) {
+    function drag_subject() {
+      const x = transform.invertX(d3.event.x),
+            y = transform.invertY(d3.event.y);
+      const node = find_node(nodes, x, y, radius);
+      if (node) {
+        node.x =  transform.applyX(node.x);
+        node.y = transform.applyY(node.y);
+      }
+      // else: No node selected, drag container
+      return node;
+    }
+
+    function find_node(nodes, x, y, radius) {
+      const rSq = radius * radius;
+      let i;
+      for (i = nodes.length - 1; i >= 0; --i) {
+        const node = nodes[i],
+              dx = x - node.x,
+              dy = y - node.y,
+              distSq = (dx * dx) + (dy * dy);
+        if (distSq < rSq) {
           return node;
         }
       }
+      // No node selected
+      return undefined; 
     }
-    
-    function dragstarted() {
-      if (!d3.event.active) simulation.alphaTarget(0.3).restart();
-      d3.event.subject.fx = d3.event.subject.x;
-      d3.event.subject.fy = d3.event.subject.y;
+
+    function drag_started() {
+      if (!d3.event.active) {
+        simulation.alphaTarget(0.1).restart();
+      }
+      d3.event.subject.fx = transform.invertX(d3.event.x);
+      d3.event.subject.fy = transform.invertY(d3.event.y);
     }
-    
+  
     function dragged() {
-      d3.event.subject.fx = d3.event.x;
-      d3.event.subject.fy = d3.event.y;
+      d3.event.subject.fx = transform.invertX(d3.event.x);
+      d3.event.subject.fy = transform.invertY(d3.event.y);
     }
-    
-    function dragended() {
-      if (!d3.event.active) simulation.alphaTarget(0);
+  
+    function drag_ended() {
+      if (!d3.event.active) {
+        simulation.alphaTarget(0);
+      }
       d3.event.subject.fx = null;
       d3.event.subject.fy = null;
+    }
+
+    function zoomed() {
+      transform = d3.event.transform;
+      ticked();
     }
   }
 }

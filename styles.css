@@ -5,7 +5,7 @@ body {
   margin: auto;
 }
 
-.graph {
+canvas {
   outline: thin black solid;
   display: block;
 }
