@@ -10,38 +10,40 @@
   <script defer src="dist/bundle.js"></script>
 </head>
 <body>
-  <div>
-    1000 x 600 canvas
-  </div>
-  <div id="graph-holder"></div>
+  <div id="container">
+    <div>
+      1000 x 600 canvas
+    </div>
+    <div id="graph-holder">
+      <canvas width="1000" height="600"></canvas>
+    </div>
 
-  <canvas width="960" height="600"></canvas>
-
-  <div class="button-holder">
-    <input type="file" accept=".json" id="upload">
-  </div>
-  <div class="button-holder">
-    <button id="show_3x5">3x5 Graph</button>
-    <button id="show_10x11">10x11 Graph</button>
-  </div>
-  <div id="desc">
-    Graphs are encoded in a JSON file with the following format:
-    <pre>
-      <code>
-{
- "directed": boolean
- "nodes": [{"id": "string1"}, ...]
- "edges": [{"source": "stringA", "target": "stringB", "weight": float, "distance": float}, ...]
-}
-      </code>
-    </pre>
-    <ul class="format">
-      <li><code>directed</code> tells whether or not the graph is directed.</li>
-      <li><code>nodes</code> is a list of objects with string ids.</li>
-      <li><code>edges</code> is a list of edge objects which specify a source and a target node id. </li>
-      <li><code>weight</code> is an optional parameter and defaults to 1.</li>
-      <li><code>distance</code> is an optional parameter and defaults to 30.</li>
-    </ul>  
+    <div class="button-holder">
+      <input type="file" accept=".json" id="upload">
+    </div>
+    <div class="button-holder">
+      <button id="show_3x5">3x5 Graph</button>
+      <button id="show_10x11">10x11 Graph</button>
+    </div>
+    <div id="desc">
+      Graphs are encoded in a JSON file with the following format:
+      <pre>
+        <code>
+  {
+  "directed": boolean
+  "nodes": [{"id": "string1"}, ...]
+  "edges": [{"source": "stringA", "target": "stringB", "weight": float, "distance": float}, ...]
+  }
+        </code>
+      </pre>
+      <ul class="format">
+        <li><code>directed</code> tells whether or not the graph is directed.</li>
+        <li><code>nodes</code> is a list of objects with string ids.</li>
+        <li><code>edges</code> is a list of edge objects which specify a source and a target node id. </li>
+        <li><code>weight</code> is an optional parameter and defaults to 1.</li>
+        <li><code>distance</code> is an optional parameter and defaults to 30.</li>
+      </ul>  
+    </div>
   </div>
 </body>
 </html>

@@ -17,7 +17,7 @@ class Graph {
     }
     
     // Scales distances for so average edge distance is reasonable
-    let scaling_factor = 35/(edges.reduce(function(acc, e) {
+    let scaling_factor = 60/(edges.reduce(function(acc, e) {
       let d = (e["distance"] === undefined) ? 30 : parseFloat(e["distance"]);
       return(acc+d);
       }, 0)/edges.length);
@@ -61,7 +61,7 @@ class Graph {
 
 }
 
-let radius = 7;
+let radius = 8;
 
 function euclid_dist(v1, v2) {
   let sum = 0;
@@ -114,8 +114,8 @@ class GraphDrawer {
       height = canvas.height;
 
     let many_body = d3.forceManyBody()
-      .strength(-50)
-      .distanceMax(150);
+      .strength(-100)
+      .distanceMax(200);
 
     let link_force = d3.forceLink(this.edges)
       .id(function(d) { return(d.id); })
@@ -193,13 +193,24 @@ class GraphDrawer {
       context.clearRect(0, 0, width, height);
       context.translate(transform.x, transform.y);
       context.scale(transform.k, transform.k);
+      
+      edges.forEach(function(d) {
+        context.beginPath();
+        draw_edge(d);
+        let ratio = euclid_dist([d.source.x, d.source.y],[d.target.x, d.target.y])/d.distance;
+        if (ratio > 0.5) {
+          ratio = ratio-0.5;
+        }
+        if (ratio > 0.5) {
+          ratio = ratio/5 + 0.4;
+        }
+        context.strokeStyle = d3.interpolateTurbo(ratio);
+        context.lineWidth = '2';
+        context.stroke(); 
+      });
 
       context.beginPath();
-      edges.forEach(draw_edge);
-      context.strokeStyle = "#aaa";
-      context.stroke();
-
-      context.beginPath();
+      context.lineWidth = '1';
       nodes.forEach(draw_node);
       context.fill();
       context.strokeStyle = "#fff";
