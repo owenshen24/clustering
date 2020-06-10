@@ -17,10 +17,10 @@ class Graph {
     }
     
     // Scales distances for so average edge distance is reasonable
-    let scaling_factor = 60/(edges.reduce(function(acc, e) {
+    let scaling_factor = 50/(edges.reduce(function(acc, e) {
       let d = (e["distance"] === undefined) ? 30 : parseFloat(e["distance"]);
       return(acc+d);
-      }, 0)/edges.length);
+    }, 0)/edges.length);
 
     // Populate edge list
     for (let e of edges) {
@@ -107,6 +107,7 @@ class GraphDrawer {
   draw_graph() {
     let nodes = this.nodes;
     let edges = this.edges;
+    let count = 0;
 
     let canvas = document.querySelector("canvas"),
       context = canvas.getContext("2d"),
@@ -114,8 +115,8 @@ class GraphDrawer {
       height = canvas.height;
 
     let many_body = d3.forceManyBody()
-      .strength(-100)
-      .distanceMax(200);
+      .strength(-50)
+      .distanceMax(150);
 
     let link_force = d3.forceLink(this.edges)
       .id(function(d) { return(d.id); })
@@ -125,10 +126,9 @@ class GraphDrawer {
       .strength(0);
   
     let is_centered = false;
-
     function approx_force() {
       //let step_size = 0.0017;
-      let step_size = 0.001;
+      let step_size = 0.00055;
       if (! is_centered) {
         is_centered = true;
         for (let i = 0; i < window["nodes"].length; i++) {
@@ -145,19 +145,25 @@ class GraphDrawer {
           // Only calculate force if neighbors exist
           // NOTE: this might still bug out for directed graphs, e.g. if A->B but B has no outgoing edges
           if (adj_list) {
+            let delta = 0.1;
             for (let j = 0; j < adj_list.length; j++) {
               let neighbor = adj_list[j]["target"];
               let v1 = [curr_node.x, curr_node.y];
               let v2 = [neighbor.x, neighbor.y];
               let diff = euclid_dist(v1, v2) - adj_list[j]["distance"];
-              diff = step_size * diff * adj_list[j]["weight"];
-              let grad = [diff*(v1[0]-v2[0]), diff*(v1[1]-v2[1])];
-              full_grad = vector_add(full_grad, grad);
+              // only update if it's a big difference
+              if (adj_list[j]["distance"]/euclid_dist(v1, v2) < (1-delta) || adj_list[j]["distance"]/euclid_dist(v1, v2) > (1+delta)) {
+                diff = step_size * diff * adj_list[j]["weight"];
+                let grad = [diff*(v1[0]-v2[0]), diff*(v1[1]-v2[1])];
+                full_grad = vector_add(full_grad, grad);
+              }
             }
             let new_x = curr_node.x - full_grad[0];
             let new_y = curr_node.y - full_grad[1];
-            curr_node.x = Math.max(radius, Math.min(width - radius, new_x));
-            curr_node.y = Math.max(radius, Math.min(height - radius, new_y));
+            //curr_node.x = Math.max(radius, Math.min(width - radius, new_x));
+            //curr_node.y = Math.max(radius, Math.min(height - radius, new_y));
+            curr_node.x = new_x;
+            curr_node.y = new_y;
           }
         }
       }
@@ -197,14 +203,20 @@ class GraphDrawer {
       edges.forEach(function(d) {
         context.beginPath();
         draw_edge(d);
-        let ratio = euclid_dist([d.source.x, d.source.y],[d.target.x, d.target.y])/d.distance;
-        if (ratio > 0.5) {
-          ratio = ratio-0.5;
+        if (count % 12 == 0) {
+          let ratio = euclid_dist([d.source.x, d.source.y],[d.target.x, d.target.y])/d.distance;
+          if (ratio > 0.5) {
+            ratio = ratio-0.5;
+          }
+          if (ratio > 0.5) {
+            ratio = ratio/5 + 0.4;
+          }
+          context.strokeStyle = d3.interpolateTurbo(ratio);
+          d["color"] = context.strokeStyle;
         }
-        if (ratio > 0.5) {
-          ratio = ratio/5 + 0.4;
+        else {
+          context.strokeStyle = d["color"];
         }
-        context.strokeStyle = d3.interpolateTurbo(ratio);
         context.lineWidth = '2';
         context.stroke(); 
       });
@@ -217,6 +229,8 @@ class GraphDrawer {
       context.stroke();
 
       context.restore();
+
+      count += 1;
     }
 
     function draw_edge(d) {

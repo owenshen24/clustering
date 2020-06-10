@@ -17,10 +17,10 @@ class Graph {
     }
     
     // Scales distances for so average edge distance is reasonable
-    let scaling_factor = 60/(edges.reduce(function(acc, e) {
+    let scaling_factor = 50/(edges.reduce(function(acc, e) {
       let d = (e["distance"] === undefined) ? 30 : parseFloat(e["distance"]);
       return(acc+d);
-      }, 0)/edges.length);
+    }, 0)/edges.length);
 
     // Populate edge list
     for (let e of edges) {
