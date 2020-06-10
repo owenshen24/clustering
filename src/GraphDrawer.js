@@ -11,6 +11,14 @@ function euclid_dist(v1, v2) {
   return(Math.sqrt(sum));
 }
 
+function l2norm(v1) {
+  let sum = 0;
+  for (let i = 0; i < v1.length; i++) {
+    sum += Math.pow(v1[i],2);
+  }
+  return(Math.sqrt(sum));
+}
+
 function vector_add(v1, v2) {
   return([v1[0]+v2[0], v1[1]+v2[1]])
 }
@@ -59,7 +67,7 @@ class GraphDrawer {
       height = canvas.height;
 
     let many_body = d3.forceManyBody()
-      .strength(-50)
+      .strength(-80)
       .distanceMax(150);
 
     let link_force = d3.forceLink(this.edges)
@@ -71,8 +79,7 @@ class GraphDrawer {
   
     let is_centered = false;
     function approx_force() {
-      //let step_size = 0.0017;
-      let step_size = 0.00055;
+      let step_size = 0.00085;
       if (! is_centered) {
         is_centered = true;
         for (let i = 0; i < window["nodes"].length; i++) {
@@ -89,7 +96,7 @@ class GraphDrawer {
           // Only calculate force if neighbors exist
           // NOTE: this might still bug out for directed graphs, e.g. if A->B but B has no outgoing edges
           if (adj_list) {
-            let delta = 0.05;
+            let delta = 0.01;
             for (let j = 0; j < adj_list.length; j++) {
               let neighbor = adj_list[j]["target"];
               let v1 = [curr_node.x, curr_node.y];
@@ -102,6 +109,13 @@ class GraphDrawer {
                 full_grad = vector_add(full_grad, grad);
               }
             }
+            
+            let norm = l2norm(full_grad);
+            if (norm > 500) {
+              full_grad[0] = 100*full_grad[0]/norm;
+              full_grad[1] = 100*full_grad[1]/norm;
+            }
+
             let new_x = curr_node.x - full_grad[0];
             let new_y = curr_node.y - full_grad[1];
             curr_node.x = new_x;
@@ -115,7 +129,7 @@ class GraphDrawer {
       .force("links", link_force)
       .force("approx_force", approx_force)
       .force("many_body", many_body)
-      .alphaDecay(0.0075);
+      .alphaDecay(0.005);
     
     let transform = d3.zoomIdentity;
 
